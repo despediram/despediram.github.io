@@ -29,3 +29,33 @@
 .dialog-actions{display:flex;gap:9px;align-items:center}#dialog-sound-toggle{display:grid;place-items:center;width:36px;height:36px;background:#192211;border:1px solid #465c31;color:#d0e0bc;font-size:17px}#dialog-sound-toggle[aria-pressed='true']{color:var(--accent)}#dialog-sound-toggle:hover{background:#26361b}
 /* A deliberate sound choice precedes the entire opening sequence. */
 html.entry-pending,html.entry-pending body{overflow:hidden!important}.entry-pending body>:not(#entry-screen) *{animation-play-state:paused!important}#entry-screen[hidden]{display:none!important}#entry-screen{position:fixed;inset:0;z-index:2000;background:#080b07;display:grid;place-items:center;isolation:isolate;overflow:auto;color:var(--white);padding:45px 25px 65px}.entry-aura{position:absolute;inset:0;z-index:-1;background:radial-gradient(ellipse at 50% 40%,#779a1120,transparent 60%);pointer-events:none}.entry-content{width:min(620px,100%);text-align:center}.entry-brand{font:700 37px 'Barlow Condensed',sans-serif;letter-spacing:-1px;display:inline-block;margin-bottom:35px}.entry-brand span{color:var(--accent)}.entry-kicker{font-size:7px;letter-spacing:2.1px;color:#8da774;margin:0 0 26px}.entry-sound-mark{height:29px;display:flex;align-items:center;justify-content:center;gap:5px;margin-bottom:27px}.entry-sound-mark i{display:block;width:3px;height:12px;background:var(--accent)}.entry-sound-mark i:nth-child(2),.entry-sound-mark i:nth-child(4){height:22px}.entry-sound-mark i:nth-child(3){height:31px}#entry-title{font-size:clamp(32px,4.3vw,58px);font-weight:500;letter-spacing:-2.5px;line-height:1.08;margin:0 0 22px}#entry-description{font-size:14px;line-height:1.8;color:#9eaf90;margin:0 0 34px}.entry-actions{display:flex;align-items:center;justify-content:center;gap:13px;flex-wrap:wrap}.entry-actions button{display:inline-flex;align-items:center;justify-content:center;gap:15px;min-height:53px;padding:16px 23px;font:10px var(--mono);letter-spacing:.3px;transition:background .2s,color .2s,border-color .2s}.entry-actions button:first-child{background:var(--accent);border:1px solid var(--accent);color:#101807}.entry-actions button:first-child:hover{background:#ddff64}.entry-actions button:last-child{background:transparent;border:1px solid #425331;color:#d1dec5}.entry-actions button:last-child:hover{border-color:#94b267;background:#182210}.entry-actions button:disabled{opacity:.5;cursor:wait}.entry-actions i{font-size:16px}#entry-status{font:8px/1.8 var(--mono);color:#71865e;margin:22px auto 0;max-width:400px;min-height:30px}.entry-foot{position:absolute;left:20px;right:20px;text-align:center;bottom:25px;font-size:6px;letter-spacing:1.8px;color:#506240}#entry-screen :focus-visible{outline:2px solid #f2f7e9;outline-offset:6px}@media(max-width:600px){#entry-screen{padding:30px 24px 70px}.entry-brand{font-size:33px;margin-bottom:30px}.entry-kicker{font-size:6px;letter-spacing:1.2px;margin-bottom:22px}.entry-sound-mark{margin-bottom:24px}#entry-title{font-size:35px;letter-spacing:-1.6px;line-height:1.12}#entry-description{font-size:12px;line-height:1.85;margin-bottom:28px}.entry-actions{flex-direction:column;gap:12px}.entry-actions button{width:min(290px,100%);min-height:53px;font-size:10px}#entry-status{font-size:7px;margin-top:22px;max-width:290px}.entry-foot{font-size:5px;letter-spacing:1px;bottom:23px}}
+
+/* Let the oversized closing signature travel across narrow screens. */
+@keyframes contact-signature-sway{
+  0%,10%{transform:translateX(calc(-50vw + 14px))}
+  90%,100%{transform:translateX(calc(50vw - 100% - 14px))}
+}
+@media(max-width:600px){
+  .contact-watermark{
+    left:50%;
+    width:max-content;
+    max-width:none;
+    animation:contact-signature-sway 8s ease-in-out infinite alternate;
+    will-change:transform;
+  }
+  .reduced-motion .contact-watermark{
+    font-size:15vw;
+    letter-spacing:-1px;
+    transform:translateX(-50%);
+    will-change:auto;
+  }
+}
+@media(max-width:600px) and (prefers-reduced-motion:reduce){
+  .contact-watermark{
+    animation:none;
+    font-size:15vw;
+    letter-spacing:-1px;
+    transform:translateX(-50%);
+    will-change:auto;
+  }
+}
