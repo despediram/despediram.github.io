@@ -79,3 +79,7 @@ html.entry-pending,html.entry-pending body{overflow:hidden!important}.entry-pend
  .experience-controls .sound-dock>button i{font-size:14px}
  footer{padding-bottom:calc(100px + env(safe-area-inset-bottom,0px))}
 }
+
+/* Keep the opening canvas free of the page scroll indicator. */
+html{background:var(--bg)}
+.entry-pending .progress,.controls-pending .progress,.assembling .progress{opacity:0;visibility:hidden}
