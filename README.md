@@ -4,6 +4,8 @@ Site pessoal de **Ton / @despediram**, com visual preto, branco e verde, abertur
 
 ## Publicação
 
+Endereço do site no GitHub Pages: **https://despediram.github.io/**.
+
 O site é estático. No GitHub Pages, publique a branch `main` a partir de `/ (root)`. O arquivo `.nojekyll` mantém os arquivos estáticos intactos.
 
 ## Edição
