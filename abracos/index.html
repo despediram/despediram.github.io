@@ -73,6 +73,75 @@ h1 span{color:var(--deep)}
   .orbit{width:min(87%,405px)}
 }
 
+
+/* Reworked stage composition: a soft, borderless glow, not a large offset pink disc. */
+.stage{
+  height:min(60svh,530px);
+  min-height:295px;
+  margin-inline:auto;
+  overflow:visible;
+}
+.halo{
+  inset:auto;
+  left:50%;
+  top:50%;
+  translate:-50% -50%;
+  width:min(80%,445px);
+  height:auto;
+  aspect-ratio:1/1;
+  background:radial-gradient(circle at 50% 48%,
+    rgba(255,255,255,.95) 0%,
+    rgba(255,246,249,.95) 35%,
+    rgba(255,224,235,.6) 55%,
+    rgba(255,225,235,.2) 67%,
+    transparent 81%);
+  box-shadow:none;
+  border:0;
+  pointer-events:none;
+}
+.stage.contact .halo{transform:scale(1.065);filter:blur(3px)}
+.orbit{display:none}
+.cat{width:min(100%,510px);z-index:2}
+#cat-canvas{
+  transform:translateX(4%);
+  transform-origin:center;
+  filter:drop-shadow(0 18px 12px rgba(155,93,121,.19));
+}
+.star.a{left:15%;top:23%}
+.star.b{right:15%;top:18%}
+.star.c{left:17%;bottom:24%}
+.star.d{right:15%;bottom:25%}
+.speech{
+  position:relative;
+  left:auto;
+  bottom:auto;
+  transform:none;
+  width:fit-content;
+  min-width:0;
+  max-width:min(85%,370px);
+  margin:-8px auto 5px;
+  padding:10px 18px;
+  z-index:4;
+  border-radius:16px;
+  font-size:13px;
+  box-shadow:0 8px 22px rgba(201,133,162,.14);
+}
+.speech.pop{animation:note-pop .3s ease}
+@keyframes note-pop{0%{scale:.97}55%{scale:1.04}100%{scale:1}}
+h1{margin:18px 0 8px}
+.description{margin-bottom:19px}
+@media(max-width:550px){
+  .stage{height:min(57svh,450px);min-height:260px}
+  .halo{width:min(83%,405px)}
+  .cat{width:100%}
+  #cat-canvas{transform:translateX(4%)}
+  .speech{margin:-8px auto 2px;max-width:89%;font-size:12px;padding:10px 14px}
+  h1{margin-top:16px}
+}
+@media(max-height:670px){
+  .stage{height:52svh;min-height:205px}
+  .speech{margin-top:-12px}
+}
 </style>
 </head>
 <body>
@@ -82,8 +151,8 @@ h1 span{color:var(--deep)}
 <div class="halo" aria-hidden="true"></div><div class="orbit" aria-hidden="true"></div>
 <span class="star a" aria-hidden="true">✦</span><span class="star b" aria-hidden="true">♡</span><span class="star c" aria-hidden="true">✧</span><span class="star d" aria-hidden="true">♡</span>
 <button id="cat" class="cat" type="button" aria-label="Tocar para receber um abraço surpresa do gatinho"><canvas id="cat-canvas" width="460" height="460" role="img" aria-label="O mesmo gatinho fofinho caminhando e abrindo as patinhas para dar um abraço"></canvas></button>
-<div id="speech" class="speech" role="status" aria-live="polite">ei! quer um abraço? 🐾</div>
 </section>
+<div id="speech" class="speech" role="status" aria-live="polite">ei! quer um abraço? 🐾</div>
 <h1>Um <span>abraço</span> pra você.</h1>
 <p class="description">Cada toque sorteia uma surpresa diferente. 🐱</p>
 <button id="hug" class="main-button" type="button">🤍 Receber um abraço</button>
