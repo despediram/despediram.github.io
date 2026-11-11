@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#fff4f1"><meta name="color-scheme" content="light dark">
-<meta name="description" content="Um gatinho caminha até você e te dá um abraço virtual! Mensagens fofas para amigos, familiares e qualquer pessoa especial.">
+<meta name="site-audio-release" content="audio-fix-4-20261111"><meta name="description" content="Um gatinho caminha até você e te dá um abraço virtual! Mensagens fofas para amigos, familiares e qualquer pessoa especial.">
 <meta property="og:title" content="Web Abraços 🐾 — tem um abraço te esperando"><meta property="og:description" content="Um gatinho vem correndo te dar um abraço. Um carinho pra deixar o dia melhor!"><meta property="og:type" content="website"><meta name="twitter:card" content="summary">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='88'%3E%F0%9F%90%B1%3C/text%3E%3C/svg%3E">
 <title>Web Abraços — um gatinho tem um abraço pra você</title>
@@ -28,6 +28,10 @@
 #sound-volume{width:75px;accent-color:#d05b89;cursor:pointer}#sound-volume:disabled{opacity:.4;cursor:not-allowed}
 @media(max-width:600px){.sound-bar{justify-content:center}.sound-action{width:100%}.music-action{flex:1}.sound-volume-label{flex:1;justify-content:center}}
 
+
+#test-sound{cursor:pointer;border-radius:12px;padding:11px 16px;box-shadow:0 4px 15px #9d528b26}
+#test-sound:focus-visible{outline:3px solid #ac6bb8;outline-offset:2px}
+#sound-check{display:inline-block;max-width:275px;line-height:1.5}
 </style>
 </head>
 <body>
@@ -56,7 +60,7 @@
     <div class="hero-buttons"><button id="hug-now" type="button" class="button primary"><span aria-hidden="true">🤗</span> Receber meu abraço <span aria-hidden="true">↗</span></button><button id="surprise" type="button" class="button secondary"><span aria-hidden="true">✨</span> Me surpreenda</button></div>
     <div class="stat-row"><div class="stat"><span class="stat-emoji">🐾</span><span><strong id="hug-count">0</strong><small>abraços neste aparelho</small></span></div><span class="stat-divider"></span><div class="stat"><span class="stat-emoji">☁️</span><span><strong>∞</strong><small>abraços disponíveis</small></span></div></div>
     <p class="hero-helper">psiu... também dá pra tocar no gatinho pra ganhar um abraço!</p>
-    <div class="sound-bar" aria-label="Controles de som"><button id="sound-banner" class="sound-action" type="button" aria-pressed="false">🔇 Ativar sons dos passinhos e abraços</button><button id="music-toggle" class="music-action" type="button" aria-pressed="false" disabled>♫ Música ambiente: desligada</button><label for="sound-volume" class="sound-volume-label">Volume <input type="range" id="sound-volume" min="0" max="100" step="5" value="75" aria-label="Volume dos sons"></label></div>
+    <div class="sound-bar" aria-label="Controles de som"><button id="test-sound" class="sound-action" type="button" style="font-weight:900;border:2px solid #ca77a0;background:#fff;color:#91446b" aria-label="Testar som agora">▶ Testar som</button><span id="sound-check" role="status" style="font-size:12px;font-weight:700;color:var(--muted)">Toque em Testar som para ouvir uma sequência de notas.</span><button id="sound-banner" class="sound-action" type="button" aria-pressed="false">🔇 Ativar sons dos passinhos e abraços</button><button id="music-toggle" class="music-action" type="button" aria-pressed="false" disabled>♫ Música ambiente: desligada</button><label for="sound-volume" class="sound-volume-label">Volume <input type="range" id="sound-volume" min="0" max="100" step="5" value="75" aria-label="Volume dos sons"></label></div>
   </div>
   <div class="scene-shell" id="scene">
     <div class="scene-stars" aria-hidden="true"><span>✦</span><span>✳</span><span>♡</span><span>✧</span></div>
@@ -214,6 +218,67 @@ function setMood(name){
   speech.textContent=moods[name].bubble;
   scene.style.setProperty('--scene-accent',moods[name].color);
 }
+
+/* Audible PCM clips — uses native HTMLAudioElement as an alternative to Web Audio. */
+const pcmClips = new Map();
+function buildPCMClip(name) {
+  const rate=22050;
+  const duration={test:1.18,step:.16,approach:.49,hug:1.23,music:2.95}[name]||1;
+  const sampleCount=Math.ceil(rate*duration);
+  const raw=new ArrayBuffer(44+sampleCount*2), dv=new DataView(raw);
+  const write=(off,str)=>{for(let i=0;i<str.length;i++)dv.setUint8(off+i,str.charCodeAt(i))};
+  write(0,'RIFF');dv.setUint32(4,36+sampleCount*2,true);write(8,'WAVE');write(12,'fmt ');
+  dv.setUint32(16,16,true);dv.setUint16(20,1,true);dv.setUint16(22,1,true);
+  dv.setUint32(24,rate,true);dv.setUint32(28,rate*2,true);dv.setUint16(32,2,true);
+  dv.setUint16(34,16,true);write(36,'data');dv.setUint32(40,sampleCount*2,true);
+  const twoPi=2*Math.PI;
+  const bell=(t,start,hz,len,amount)=>{
+    const q=t-start;if(q<0||q>=len)return 0;
+    const env=Math.min(1,q*90)*Math.exp(-3.1*q/len);
+    return amount*env*(Math.sin(twoPi*hz*q)+.16*Math.sin(twoPi*hz*2*q));
+  };
+  for(let i=0;i<sampleCount;i++){
+    const t=i/rate;let v=0;
+    if(name==='test'){
+      v+=bell(t,.02,523.25,.45,.57)+bell(t,.24,659.25,.55,.53)+bell(t,.47,783.99,.67,.5);
+    } else if(name==='step'){
+      const env=Math.min(1,t*110)*Math.exp(-27*t);
+      v=(Math.sin(twoPi*160*t)+.34*Math.sin(twoPi*310*t))*.72*env;
+    } else if(name==='approach'){
+      const f=310+620*(t/.49);
+      v=.48*Math.sin(twoPi*(310*t+310*t*t/.49))*Math.sin(Math.PI*Math.min(1,t/.49))+.33*bell(t,.08,622,.34,.8);
+    } else if(name==='hug'){
+      v+=bell(t,.02,392,.49,.38)+bell(t,.17,523.25,.65,.53)+bell(t,.34,659.25,.76,.47)+bell(t,.49,783.99,.72,.46)+bell(t,.7,1046.5,.49,.28);
+    } else if(name==='music'){
+      const notes=[523.25,659.25,783.99,659.25,587.33,698.46,659.25,523.25];
+      notes.forEach((hz,j)=>{v+=bell(t,j*.35,hz,.41,.34)});
+    }
+    const clipped=Math.tanh(v*1.1)*.9;
+    dv.setInt16(44+i*2,Math.round(clipped*32767),true);
+  }
+  const a=new Audio(URL.createObjectURL(new Blob([raw],{type:'audio/wav'})));
+  a.preload='auto';a.playsInline=true;
+  return a;
+}
+function playNativeClip(name,force=false){
+  if(!state.sound&&!force)return Promise.resolve(false);
+  if(typeof Audio==='undefined')return Promise.reject(new Error('Audio não suportado'));
+  const a=pcmClips.get(name)||buildPCMClip(name);
+  pcmClips.set(name,a);
+  const volume=Math.max(.40,Math.min(1,state.volume||.85));
+  a.volume=volume;
+  try{
+    a.pause();a.currentTime=0;
+    const result=a.play();
+    return result&&typeof result.then==='function'?result.then(()=>true):Promise.resolve(true);
+  }catch(e){return Promise.reject(e)}
+}
+function audioFeedback(ok){
+  const el=document.querySelector('#sound-check');
+  if(el)el.textContent=ok?'✅ Teste iniciado. Agora toque em “Receber meu abraço”.':'⚠️ Som bloqueado. Abra no Chrome e toque em “Testar som”.';
+  if(!ok)toast('Não foi possível reproduzir. Confira o volume de mídia do aparelho.');
+}
+
 function getAudio(){
   if(!state.sound)return null;
   const Audio=window.AudioContext||window.webkitAudioContext;
@@ -233,13 +298,16 @@ function playChime(notes=[740,880,1100],volume=.055){
   const ac=getAudio();if(!ac)return;notes.forEach((n,i)=>playTone(n,ac.currentTime+.105*i,.26,volume,'sine',1.05))
 }
 function playFootstep(){
+  playNativeClip('step').catch(()=>{});
   const ac=getAudio();if(!ac)return;
   const at=ac.currentTime;playTone(210+(state.lastStepTime%2)*34,at,.09,.12,'triangle',.47);playTone(410,at+.018,.043,.027,'sine',.65)
 }
 function playApproach(){
+  playNativeClip('approach').catch(()=>{});
   const ac=getAudio();if(!ac)return;playTone(260,ac.currentTime,.27,.085,'triangle',1.8);playTone(520,ac.currentTime+.1,.22,.045,'sine',1.2)
 }
 function playHug(group=false){
+  playNativeClip('hug').catch(()=>{});
   const ac=getAudio();if(!ac)return;playTone(250,ac.currentTime,.28,.16,'sine',.52);playTone(440,ac.currentTime+.085,.48,.065,'triangle',1.02);
   playTone(554.37,ac.currentTime+.15,.54,.06,'sine',1.015);playTone(659.25,ac.currentTime+.22,.6,.055,'sine',1.015);
   if(group)playTone(880,ac.currentTime+.35,.48,.05,'sine',1.03)
@@ -248,6 +316,7 @@ function playNoteOpen(){
   const ac=getAudio();if(!ac)return;playTone(520,ac.currentTime,.12,.038,'triangle',1.2);playTone(780,ac.currentTime+.09,.21,.05,'sine',1.15)
 }
 function playMelody(){
+  playNativeClip('music').catch(()=>{});
   if(!state.sound||!state.music||document.hidden)return;
   const ac=getAudio();if(!ac)return;
   [523.25,659.25,783.99,659.25,587.33,698.46,659.25,523.25].forEach((n,i)=>playTone(n,ac.currentTime+i*.37,.28,.017,'sine',1))
@@ -266,12 +335,30 @@ function updateSoundUI(){
   if(music){music.disabled=!state.sound;music.textContent=state.music?'♫ Música ambiente: tocando':'♫ Música ambiente: desligada';music.setAttribute('aria-pressed',String(state.music))}
 }
 function toggleSound(){
-  state.sound=!state.sound;saveStore('abracos_v2_sound',state.sound);
-  if(!state.sound)stopMusic();applyPrefs();updateSoundUI();
-  if(state.sound){playChime([523,659,784],.09);toast('Som ativado! Agora escute os passinhos e o abraço 🐾')}
-  else toast('Som desligado 🔇')
+  state.sound=!state.sound;
+  if(state.sound && state.volume<.12){state.volume=.85;saveStore('abracos_v3_volume',state.volume)}
+  saveStore('abracos_v2_sound',state.sound);
+  if(!state.sound){stopMusic();for(const audio of pcmClips.values())audio.pause();}
+  applyPrefs();updateSoundUI();
+  if(state.sound){
+    const context=getAudio();
+    if(context?.state==='suspended')context.resume().catch(()=>{});
+    playNativeClip('test',true).then(audioFeedback,()=>audioFeedback(false));
+    toast('🔊 Som ligado. Ouça o teste e experimente um abraço!');
+  } else {
+    const el=document.querySelector('#sound-check');
+    if(el)el.textContent='Sons desligados';
+    toast('Sons desligados 🔇');
+  }
 }
 function setupSoundControls(){
+  document.querySelector('#test-sound')?.addEventListener('click',()=>{
+    if(!state.sound){toggleSound();return}
+    if(state.volume<.12){state.volume=.85;saveStore('abracos_v3_volume',state.volume);updateSoundUI()}
+    const ac=getAudio();if(ac?.state==='suspended')ac.resume().catch(()=>{});
+    playNativeClip('test',true).then(audioFeedback,()=>audioFeedback(false));
+  });
+
   document.querySelector('#sound-banner')?.addEventListener('click',toggleSound);
   document.querySelector('#sound-volume')?.addEventListener('input',e=>{state.volume=Math.max(0,Math.min(1,Number(e.target.value)/100));saveStore('abracos_v3_volume',state.volume)});
   document.querySelector('#sound-volume')?.addEventListener('change',()=>playChime([740,990],.07));
