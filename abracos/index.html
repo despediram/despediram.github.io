@@ -49,6 +49,28 @@ h1 span{color:var(--deep)}
 .cat,#cat-canvas{transition:none!important;-webkit-tap-highlight-color:transparent}
 .cat{overflow:visible}
 .stage{isolation:isolate}
+
+/* Alinha o círculo e o aro ao centro VISUAL do gatinho (a arte no sprite tem uma margem maior à direita).
+   Dimensões 1:1 impedem que o círculo vire uma elipse em telas menores. */
+.halo,.orbit{
+  left:calc(50% - clamp(14px,3.1vw,25px));
+  top:50%;
+  translate:-50% -50%;
+}
+.halo{
+  inset:auto;
+  width:min(90%,540px);
+  aspect-ratio:1 / 1;
+}
+.orbit{
+  width:min(86%,520px);
+  aspect-ratio:1 / 1;
+}
+@media(max-width:550px){
+  .halo{width:min(92%,430px)}
+  .orbit{width:min(87%,405px)}
+}
+
 </style>
 </head>
 <body>
