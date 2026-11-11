@@ -47,6 +47,16 @@ h1 span{color:var(--rose)}
 @media(max-width:520px){main{padding:8px 12px calc(24px + env(safe-area-inset-bottom));justify-content:center}.stage{height:min(58svh,460px);min-height:270px}.cat,.cat canvas{max-width:450px}.bubble{margin-top:-25px}h1{margin-top:15px}.desc{margin-bottom:18px}.ring{width:85%}}
 @media(max-height:650px){main{min-height:100svh}.stage{height:52svh;min-height:220px}h1{margin-top:12px}.desc{margin-bottom:12px}}
 @media(prefers-reduced-motion:reduce){.spark,.ring,.cat:not(.walking):not(.hugging):not(.holding):not(.retreat){animation:none!important}*,*::before,*::after{scroll-behavior:auto!important}}
+
+/* MOBILE_TAP_HIGHLIGHT_FIX_20261111: remove the blue touch square without hiding keyboard focus. */
+.cat,.cat canvas,.button{
+  -webkit-tap-highlight-color:transparent;
+  -webkit-touch-callout:none;
+  -webkit-user-select:none;
+  user-select:none;
+  touch-action:manipulation;
+}
+.cat:focus:not(:focus-visible){outline:none;box-shadow:none}
 </style>
 </head>
 <body>
