@@ -19,6 +19,15 @@
 @media(max-width:1000px){.desktop-nav{display:none}.hero{grid-template-columns:1fr;gap:22px;padding-top:25px;padding-bottom:40px}.hero-copy{max-width:720px}.scene-shell{width:min(100%,640px);margin:0 auto}.quick{padding-top:70px}.notes-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.quick-grid{gap:12px}.quick-card{padding:19px}.quick-card strong{font-size:19px}}
 @media(max-width:650px){.shell{width:calc(100% - 30px)}.header{height:77px}.brand{font-size:17px}.brand-icon{width:35px;height:35px;border-radius:12px;font-size:17px}.header-tools{gap:6px}.icon-button{height:37px;width:37px;border-radius:13px;font-size:17px}.hero{padding-top:25px}.overline{font-size:9px;letter-spacing:.8px}.hero h1{font-size:clamp(41px,10vw,55px);letter-spacing:-2px}.intro{font-size:13px}.mood-chip{font-size:10px;padding:9px 11px}.hero-buttons{display:grid;grid-template-columns:1fr}.hero-buttons .button{width:100%}.stat-row{gap:13px}.stat strong{font-size:20px}.stat small{font-size:9px}.stat-emoji{width:38px;height:38px}.scene-shell{height:455px;border-radius:31px;border-width:5px}.scene-shell:before{width:230px;height:230px;top:90px;left:calc(50% - 115px)}.scene-halo{width:215px;height:215px;top:103px}.cat-button{top:75px;bottom:62px;left:5px;right:5px;width:calc(100% - 10px)}.cat-button canvas{max-width:320px}.scene-top-pill{top:14px;left:14px}.speech{bottom:52px;font-size:10px;padding:10px 13px}.scene-bottom{left:10px;right:10px;bottom:8px;font-size:9px}.marquee{font-size:9px;padding:15px 0}.marquee span{padding:0 9px}.quick,.notes-section{padding-top:60px}.quick-heading{display:block}.quick-heading p{margin-top:9px;max-width:100%}.quick-grid,.notes-grid{grid-template-columns:1fr}.quick-card{min-height:180px}.quick-card strong{margin-top:48px}.quick-art{font-size:57px}.note-card{min-height:215px}.note-icon{margin:12px 0 7px}.create-section{padding-top:65px}.create-card{grid-template-columns:1fr;padding:27px 25px;gap:0}.create-illustration{height:140px}.envelope{font-size:95px}.footer{margin-top:50px;flex-direction:column;gap:12px;text-align:center}.dialog-actions,.form-actions{display:grid;grid-template-columns:1fr}.dialog-actions .button,.form-actions .button{width:100%}dialog{padding:25px}}
 @media(prefers-reduced-motion:reduce){*,*:before,*:after{animation-duration:.001ms!important;transition-duration:.001ms!important;scroll-behavior:auto!important}}
+
+.sound-bar{display:flex;align-items:center;flex-wrap:wrap;gap:9px;margin-top:18px;padding:12px;border:1px solid var(--line);border-radius:19px;background:var(--surface);box-shadow:0 8px 28px #ca8caa12}
+.sound-action,.music-action{border:1px solid var(--line);border-radius:13px;background:var(--pale);color:var(--ink);padding:11px 13px;font:800 12px 'DM Sans',system-ui,sans-serif;cursor:pointer;transition:transform .2s}
+.sound-action:hover,.music-action:not(:disabled):hover{transform:translateY(-1px)}
+.sound-action[aria-pressed='true']{color:#a9456f;background:#ffe5ef;border-color:#eeb6ce}.dark .sound-action[aria-pressed='true']{color:#ffd0e2;background:#50304a}
+.music-action:disabled{opacity:.45;cursor:not-allowed}.sound-volume-label{display:inline-flex;gap:7px;align-items:center;color:var(--muted);font-size:11px;font-weight:800}
+#sound-volume{width:75px;accent-color:#d05b89;cursor:pointer}#sound-volume:disabled{opacity:.4;cursor:not-allowed}
+@media(max-width:600px){.sound-bar{justify-content:center}.sound-action{width:100%}.music-action{flex:1}.sound-volume-label{flex:1;justify-content:center}}
+
 </style>
 </head>
 <body>
@@ -47,6 +56,7 @@
     <div class="hero-buttons"><button id="hug-now" type="button" class="button primary"><span aria-hidden="true">🤗</span> Receber meu abraço <span aria-hidden="true">↗</span></button><button id="surprise" type="button" class="button secondary"><span aria-hidden="true">✨</span> Me surpreenda</button></div>
     <div class="stat-row"><div class="stat"><span class="stat-emoji">🐾</span><span><strong id="hug-count">0</strong><small>abraços neste aparelho</small></span></div><span class="stat-divider"></span><div class="stat"><span class="stat-emoji">☁️</span><span><strong>∞</strong><small>abraços disponíveis</small></span></div></div>
     <p class="hero-helper">psiu... também dá pra tocar no gatinho pra ganhar um abraço!</p>
+    <div class="sound-bar" aria-label="Controles de som"><button id="sound-banner" class="sound-action" type="button" aria-pressed="false">🔇 Ativar sons dos passinhos e abraços</button><button id="music-toggle" class="music-action" type="button" aria-pressed="false" disabled>♫ Música ambiente: desligada</button><label for="sound-volume" class="sound-volume-label">Volume <input type="range" id="sound-volume" min="0" max="100" step="5" value="75" aria-label="Volume dos sons"></label></div>
   </div>
   <div class="scene-shell" id="scene">
     <div class="scene-stars" aria-hidden="true"><span>✦</span><span>✳</span><span>♡</span><span>✧</span></div>
@@ -143,6 +153,8 @@ const state = {
   walkOnly: false,
   group: false,
   seenCustom: false,
+  volume: clamp(Number(readStore('abracos_v3_volume','0.75'))||0,0,1),
+  music: false, musicTimer: null, lastStepTime: 0,
   soundContext: null,
   toastTimer: null
 };
@@ -156,7 +168,8 @@ function applyPrefs(){
   document.body.classList.toggle('dark',state.dark);
   $('#theme-toggle').textContent=state.dark?'☀':'☾';
   $('#theme-toggle').setAttribute('aria-label',state.dark?'Ativar tema claro':'Ativar tema escuro');
-  $('#sound-toggle').textContent=state.sound?'♫':'♪';
+  $('#sound-toggle').textContent=state.sound?'🔊':'🔇';
+  $('#sound-toggle').setAttribute('aria-pressed',String(state.sound));
   $('#sound-toggle').setAttribute('aria-label',state.sound?'Desligar sons':'Ativar sons');
 }
 function toast(text){toastEl.textContent=text;toastEl.classList.add('show');clearTimeout(state.toastTimer);state.toastTimer=setTimeout(()=>toastEl.classList.remove('show'),2700)}
@@ -201,22 +214,77 @@ function setMood(name){
   speech.textContent=moods[name].bubble;
   scene.style.setProperty('--scene-accent',moods[name].color);
 }
-function playChime(notes=[740,880,1100], volume=.04){
-  if(!state.sound)return;
-  try{
-    const AC=window.AudioContext||window.webkitAudioContext;
-    if(!AC)return;
-    state.soundContext ??= new AC();
-    const ac=state.soundContext;
-    if(ac.state==='suspended')ac.resume();
-    notes.forEach((f,i)=>{
-      const osc=ac.createOscillator(),gain=ac.createGain(),time=ac.currentTime+i*.105;
-      osc.type='sine';osc.frequency.setValueAtTime(f,time);osc.frequency.exponentialRampToValueAtTime(f*1.12,time+.18);
-      gain.gain.setValueAtTime(.001,time);gain.gain.exponentialRampToValueAtTime(volume,time+.015);gain.gain.exponentialRampToValueAtTime(.001,time+.24);
-      osc.connect(gain).connect(ac.destination);osc.start(time);osc.stop(time+.26);
-    });
-  }catch(e){}
+function getAudio(){
+  if(!state.sound)return null;
+  const Audio=window.AudioContext||window.webkitAudioContext;
+  if(!Audio)return null;
+  try{state.soundContext ??= new Audio();if(state.soundContext.state==='suspended')state.soundContext.resume().catch(()=>{});return state.soundContext}catch(e){return null}
 }
+function playTone(freq,when,length=.22,level=.065,wave='sine',finish=1){
+  const ac=getAudio();if(!ac)return;
+  const oscillator=ac.createOscillator(),gain=ac.createGain();oscillator.type=wave;
+  oscillator.frequency.setValueAtTime(freq,when);
+  oscillator.frequency.exponentialRampToValueAtTime(Math.max(1,freq*finish),when+length);
+  const v=Math.max(.0001,level*state.volume);
+  gain.gain.setValueAtTime(.0001,when);gain.gain.exponentialRampToValueAtTime(v,when+Math.min(.025,length*.16));gain.gain.exponentialRampToValueAtTime(.0001,when+length);
+  oscillator.connect(gain).connect(ac.destination);oscillator.start(when);oscillator.stop(when+length+.015);
+}
+function playChime(notes=[740,880,1100],volume=.055){
+  const ac=getAudio();if(!ac)return;notes.forEach((n,i)=>playTone(n,ac.currentTime+.105*i,.26,volume,'sine',1.05))
+}
+function playFootstep(){
+  const ac=getAudio();if(!ac)return;
+  const at=ac.currentTime;playTone(210+(state.lastStepTime%2)*34,at,.09,.12,'triangle',.47);playTone(410,at+.018,.043,.027,'sine',.65)
+}
+function playApproach(){
+  const ac=getAudio();if(!ac)return;playTone(260,ac.currentTime,.27,.085,'triangle',1.8);playTone(520,ac.currentTime+.1,.22,.045,'sine',1.2)
+}
+function playHug(group=false){
+  const ac=getAudio();if(!ac)return;playTone(250,ac.currentTime,.28,.16,'sine',.52);playTone(440,ac.currentTime+.085,.48,.065,'triangle',1.02);
+  playTone(554.37,ac.currentTime+.15,.54,.06,'sine',1.015);playTone(659.25,ac.currentTime+.22,.6,.055,'sine',1.015);
+  if(group)playTone(880,ac.currentTime+.35,.48,.05,'sine',1.03)
+}
+function playNoteOpen(){
+  const ac=getAudio();if(!ac)return;playTone(520,ac.currentTime,.12,.038,'triangle',1.2);playTone(780,ac.currentTime+.09,.21,.05,'sine',1.15)
+}
+function playMelody(){
+  if(!state.sound||!state.music||document.hidden)return;
+  const ac=getAudio();if(!ac)return;
+  [523.25,659.25,783.99,659.25,587.33,698.46,659.25,523.25].forEach((n,i)=>playTone(n,ac.currentTime+i*.37,.28,.017,'sine',1))
+}
+function stopMusic(){
+  state.music=false;clearInterval(state.musicTimer);state.musicTimer=null;
+  const button=document.querySelector('#music-toggle');
+  if(button){button.textContent='♫ Música ambiente: desligada';button.setAttribute('aria-pressed','false')}
+}
+function updateSoundUI(){
+  const trigger=document.querySelector('#sound-banner');
+  if(trigger){trigger.textContent=state.sound?'🔊 Sons do gatinho ativados':'🔇 Ativar sons dos passinhos e abraços';trigger.setAttribute('aria-pressed',String(state.sound))}
+  const slider=document.querySelector('#sound-volume');
+  if(slider){slider.disabled=!state.sound;slider.value=Math.round(state.volume*100)}
+  const music=document.querySelector('#music-toggle');
+  if(music){music.disabled=!state.sound;music.textContent=state.music?'♫ Música ambiente: tocando':'♫ Música ambiente: desligada';music.setAttribute('aria-pressed',String(state.music))}
+}
+function toggleSound(){
+  state.sound=!state.sound;saveStore('abracos_v2_sound',state.sound);
+  if(!state.sound)stopMusic();applyPrefs();updateSoundUI();
+  if(state.sound){playChime([523,659,784],.09);toast('Som ativado! Agora escute os passinhos e o abraço 🐾')}
+  else toast('Som desligado 🔇')
+}
+function setupSoundControls(){
+  document.querySelector('#sound-banner')?.addEventListener('click',toggleSound);
+  document.querySelector('#sound-volume')?.addEventListener('input',e=>{state.volume=Math.max(0,Math.min(1,Number(e.target.value)/100));saveStore('abracos_v3_volume',state.volume)});
+  document.querySelector('#sound-volume')?.addEventListener('change',()=>playChime([740,990],.07));
+  const music=document.querySelector('#music-toggle');
+  music?.addEventListener('click',()=>{
+    if(!state.sound){toggleSound();return}
+    if(state.music){stopMusic();toast('Música ambiente desligada')}
+    else{state.music=true;playMelody();state.musicTimer=setInterval(playMelody,3200);music.textContent='♫ Música ambiente: tocando';music.setAttribute('aria-pressed','true');toast('Trilha fofinha ativada ♫')}
+  });
+  document.addEventListener('visibilitychange',()=>{if(document.hidden&&state.soundContext?.state==='running')state.soundContext.suspend().catch(()=>{})});
+  updateSoundUI()
+}
+
 function particles(amount=23){
   if(prefersReducedMotion.matches)return;
   const r=cat.getBoundingClientRect();const x=r.left+r.width*.5,y=r.top+r.height*.42;
@@ -238,7 +306,7 @@ function changePhase(phase,when){
   cat.classList.remove('walking','hugging','retreat','strolling');
   scene.classList.remove('hug-glow');
   if(phase==='walking'){cat.classList.add('walking');stageLabel.textContent='patinhas a caminho...';speech.textContent='tô chegando! 🐾'}
-  if(phase==='hugging'){cat.classList.add('hugging');stageLabel.textContent='hora do abraço!';scene.classList.add('hug-glow');speech.textContent='ABRAÇOOOO! 🤗'}
+  if(phase==='hugging'){cat.classList.add('hugging');stageLabel.textContent='hora do abraço!';scene.classList.add('hug-glow');speech.textContent='ABRAÇOOOO! 🤗';playApproach()}
   if(phase==='retreat'){cat.classList.add('retreat');stageLabel.textContent='abraço entregue! ✨'}
   if(phase==='strolling'){cat.classList.add('strolling');stageLabel.textContent='passeando por aqui... 🐈';speech.textContent='olha meus passinhos! 🐾'}
   if(phase==='idle'){stageLabel.textContent='prontinho pra outro abraço';speech.textContent='quer mais um? é só chamar! ☁️'}
@@ -258,7 +326,7 @@ function deliverHug(){
   state.hugs+=state.group?10:1;
   hugCount.textContent=state.hugs.toLocaleString('pt-BR');saveStore('abracos_v2_count',state.hugs);
   particles(state.group?75:28);
-  playChime(state.group?[700,820,950,1100]:[740,910,1080],.045);
+  playHug(state.group);
   if(navigator.vibrate){try{navigator.vibrate([35,35,45])}catch(e){}}
   toast(state.group?'Abraço coletivo entregue! +10 🫂':'Abraço recebido! +1 🐾');
   if(hasGift&&!state.seenCustom){state.seenCustom=true;setTimeout(()=>noteDialog(state.title||'Um recado junto com seu abraço',state.text||moods[state.mood].note),670)}
@@ -274,6 +342,7 @@ function drawFrame(frame){
 }
 function loop(time){
   const elapsed=time-state.started;
+  if(state.sound && (state.phase==='walking'||state.phase==='strolling') && elapsed>180 && time-state.lastStepTime>245){state.lastStepTime=time;playFootstep()}
   if(state.phase==='idle'){
     const idle=[0,0,1,0,14,15,0,0];
     drawFrame(idle[Math.floor(time/520)%idle.length]);
@@ -300,9 +369,9 @@ function showRandomGift(){
   state.lastGift=(state.lastGift+1+Math.floor(Math.random()*(messages.length-1)))%messages.length;
   $('#gift-text').textContent=messages[state.lastGift];
   $('#gift-dialog').showModal();
-  playChime([700,820],.025);
+  playNoteOpen();
 }
-function chooseNote(index){const data=presets[index];if(!data)return;noteDialog(data.title,data.text);playChime([660,880],.018)}
+function chooseNote(index){const data=presets[index];if(!data)return;noteDialog(data.title,data.text);playNoteOpen()}
 function fitLines(paint,text,x,y,maxWidth,lineHeight,maxLines){
   const words=String(text).split(/\s+/);let line='',count=0;
   for(const word of words){const test=line?line+' '+word:word;if(paint.measureText(test).width>maxWidth && line){paint.fillText(line,x,y+count*lineHeight);count++;line=word;if(count>=maxLines-1)break}else{line=test}}
@@ -329,7 +398,7 @@ function bind(){
   $('#group-hug').addEventListener('click',()=>beginHug(true));
   $('#walk-only').addEventListener('click',()=>beginHug(false,true));
   $$('.mood-chip').forEach(b=>b.addEventListener('click',()=>{setMood(b.dataset.mood);playChime([620,790],.018)}));
-  $('#sound-toggle').addEventListener('click',()=>{state.sound=!state.sound;saveStore('abracos_v2_sound',state.sound);applyPrefs();if(state.sound)playChime();toast(state.sound?'Sons ativados ♪':'Sons desligados 🔇')});
+  $('#sound-toggle').addEventListener('click',toggleSound);
   $('#theme-toggle').addEventListener('click',()=>{state.dark=!state.dark;saveStore('abracos_v2_dark',state.dark);applyPrefs()});
   $('#share-top').addEventListener('click',()=>shareLink(constructLink()));
   $('#footer-share').addEventListener('click',()=>shareLink(constructLink()));
@@ -357,7 +426,7 @@ function fillForm(){$('#custom-heading').value=state.title;$('#custom-text').val
 applyPrefs();displayCustom();hugCount.textContent=state.hugs.toLocaleString('pt-BR');
 state.currentText=state.text||moods.amizade.note;state.currentTitle=state.title||'Um abraço pra você!';
 setMood(state.mood);speech.textContent=hasGift?'tem um recadinho especial com seu abraço! 💌':'toca no gatinho pra um abraço! 🐾';
-bind();drawFrame(0);requestAnimationFrame(loop);
+bind();setupSoundControls();drawFrame(0);requestAnimationFrame(loop);
 })();
 </script>
 </body></html>
